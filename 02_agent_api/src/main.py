@@ -12,6 +12,14 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def _root_cause(exc: BaseException) -> str:
+    """Los errores de MCP llegan envueltos en un ExceptionGroup ("unhandled errors in a
+    TaskGroup"). Se desenvuelve para mostrar la causa real (por ejemplo, un .env faltante)."""
+    while isinstance(exc, BaseExceptionGroup) and exc.exceptions:
+        exc = exc.exceptions[0]
+    return f"{type(exc).__name__}: {exc}"
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: conectar a los MCP servers configurados y reinicializar el agente con
@@ -43,7 +51,11 @@ async def lifespan(app: FastAPI):
         if demo_tools:
             logger.info("Demo MCP server conectado — %d tool(s) disponibles", len(demo_tools))
     except Exception as exc:
-        logger.warning("Error conectando al demo MCP server: %s. Continuando sin esas tools.", exc)
+        logger.warning(
+            "Error conectando al demo MCP server: %s. Continuando sin esas tools. "
+            "Revisa 03_mcp_server/.env, las dependencias de 03_mcp_server/requirements.txt y que DEMO_MCP_SERVER_PATH sea absoluta.",
+            _root_cause(exc),
+        )
 
     try:
         skills = await load_demo_mcp_skills(demo_client)
