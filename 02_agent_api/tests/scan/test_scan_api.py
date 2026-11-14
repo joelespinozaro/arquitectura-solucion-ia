@@ -109,9 +109,13 @@ def test_salida_limpia(client):
 def test_auditoria_sin_texto_original(client, caplog):
     with caplog.at_level(logging.INFO):
         r = post_input(client, "Mi DNI es 90000001", "mask")
-    log = " ".join(rec.getMessage() for rec in caplog.records)
-    assert "90000001" not in log
-    assert r["audit_id"] in log and "text_hash=" in log
+    registros = [rec for rec in caplog.records if getattr(rec, "audit_id", None)]
+    assert registros, "no se registró la auditoría"
+    # El audit_id va como campo estructurado (el filtro de PII de los logs
+    # puede reformatear el mensaje, por eso no se valida sobre el texto).
+    assert registros[0].audit_id == r["audit_id"]
+    assert registros[0].text_hash.startswith("h_")
+    assert all("90000001" not in rec.getMessage() for rec in caplog.records)
 
 
 def test_api_key_requerida_si_esta_configurada(client, monkeypatch):

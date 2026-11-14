@@ -65,6 +65,8 @@ jailbreak:
   - "AIM\\s+mode"
   - "modo\\s+dios"
   - "god\\s+mode"
+  - "(eres|ser[aá]s|act[uú]a\\s+como)\\s+(ahora\\s+)?DAN\\b"
+  - "a\\s+partir\\s+de\\s+ahora\\s+(eres|act[uú]as\\s+como)\\s+.{0,40}sin\\s+(reglas|restricciones|l[ií]mites)"
 
 extraccion:
   - "reveal\\s+your\\s+(system\\s+)?prompt"
@@ -85,6 +87,11 @@ extraccion:
   - "show\\s+me\\s+your\\s+(api\\s*key|credentials|secret)"
   - "cu[aá]les\\s+son\\s+tus\\s+reglas\\s+internas"
   - "output\\s+your\\s+(raw\\s+)?(system\\s+)?instructions"
+  - "mu[eé]str(a|ame)\\s+(me\\s+)?(tu|el)\\s+(system\\s*)?prompt"
+  - "repeat\\s+your\\s+(system\\s+)?(prompt|instructions)"
+  - "repite\\s+tu\\s+(system\\s*)?prompt"
+  - "cu[aá]les\\s+son\\s+tus\\s+instrucciones(\\s+internas)?"
+  - "(escribe|dame|copia)\\s+(literalmente\\s+)?tus\\s+instrucciones"
 
 reconocimiento:
   - "qu[eé]\\s+base\\s+de\\s+datos\\s+usas"

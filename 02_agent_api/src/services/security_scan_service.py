@@ -64,7 +64,8 @@ class ScanResult:
 
 
 def _hash(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    # Prefijo con letra y "_": el filtro de PII de los logs no lo confunde con un DNI.
+    return "h_" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
 def _pii_matches(text: str) -> List[PIIMatch]:
@@ -111,7 +112,7 @@ def _finish(
         decision = "mask"
     else:
         decision = "allow"
-    audit_id = uuid.uuid4().hex[:12]
+    audit_id = "aud_" + uuid.uuid4().hex[:12]
     logger.info(
         "scan_%s decision=%s pii_mode=%s text_hash=%s length=%d findings=%s audit_id=%s",
         kind,
@@ -121,6 +122,7 @@ def _finish(
         len(text),
         sorted({f"{f.layer}:{f.category}" for f in findings}),
         audit_id,
+        extra={"audit_id": audit_id, "text_hash": _hash(text)},
     )
     return ScanResult(
         decision=decision,
