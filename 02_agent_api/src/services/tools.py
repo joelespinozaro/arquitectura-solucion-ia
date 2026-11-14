@@ -3,7 +3,8 @@ from typing import Dict, List, Tuple
 from langchain_core.tools import tool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
-from src.utils.environment import DEMO_MCP_SERVER_URL, NEON_API_KEY
+from src.services.mcp_trust import filter_trusted_tools
+from src.utils.environment import DEMO_MCP_SERVER_URL, MCP_ALLOWED_SERVERS, MCP_TRUST_MODE, NEON_API_KEY
 from src.utils.gcp_auth import GoogleIDTokenAuth, cloud_run_audience
 from src.utils.logger import get_logger
 
@@ -36,7 +37,7 @@ async def load_neon_tools() -> Tuple[list, object | None]:
             }
         }
     )
-    tools = await client.get_tools()
+    tools = filter_trusted_tools("neon", await client.get_tools(), MCP_TRUST_MODE, MCP_ALLOWED_SERVERS or None)
     return tools, client
 
 
@@ -70,7 +71,9 @@ async def load_demo_mcp_tools() -> Tuple[list, MultiServerMCPClient | None]:
             }
         }
     )
-    tools = await client.get_tools()
+    tools = filter_trusted_tools(
+        DEMO_MCP_SERVER_NAME, await client.get_tools(), MCP_TRUST_MODE, MCP_ALLOWED_SERVERS or None
+    )
     return tools, client
 
 

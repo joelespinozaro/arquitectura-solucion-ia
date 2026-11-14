@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "demo_mcp_server": {
+      "estado_matricula": "d271062d891f0d8e77157ab6dbe7891e614e092d21ec2612a377baf5e6861a8b",
+      "retrieve_documents": "e02b7758f7e5847d087d23baed69b5b65a92ed1205e46c794ab4be2e47057e9e",
+      "solicitar_asesoria": "fc90456d789e025f21dbb8164bc7192c23bc89483da35f1d8ef9828ec7d9aa08"
+    }
+  }
+}

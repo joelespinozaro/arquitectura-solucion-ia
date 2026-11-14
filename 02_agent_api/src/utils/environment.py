@@ -81,3 +81,7 @@ TOKEN_BUDGET: int = config("TOKEN_BUDGET", default=8000, cast=int)
 
 # Servicio de escaneo /v1/scan/*: si se define, exige el header X-API-Key
 SCAN_API_KEY: str | None = config("SCAN_API_KEY", default=None)
+# Confianza en servidores MCP (ver src/services/mcp_trust.py): enforce | warn | off
+MCP_TRUST_MODE: str = config("MCP_TRUST_MODE", default="warn")
+# Lista separada por comas de servidores MCP permitidos (vacío = sin restricción)
+MCP_ALLOWED_SERVERS: list[str] = [s.strip() for s in config("MCP_ALLOWED_SERVERS", default="").split(",") if s.strip()]
