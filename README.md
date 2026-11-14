@@ -66,6 +66,10 @@ Al iniciar, WAHA muestra en su terminal la API key y el usuario y clave del dash
 
 Para pasar a la siguiente parte: `git switch m4-s2-p2-skills` y reinicia el Agent API.
 
+## Chat web
+
+Para probar el agente sin WhatsApp: con el Agent API levantado abre `http://localhost:8080/chat/`. Tiene sesiones, historial y muestra en vivo qué skill carga el agente y qué tools usa. Detalles en `06_web_chat/README.md`.
+
 ## Guía paso a paso
 
 La guía interactiva del laboratorio (capturas, variables y solución de errores) está publicada en
