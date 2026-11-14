@@ -1,0 +1,27 @@
+# WAHA (WhatsApp HTTP API) para el laboratorio.
+# Sin rutas dentro de comandos: funciona igual en Git Bash, PowerShell, macOS y Linux.
+#   cd waha && cp .env.example .env   (edita las claves)   &&   docker compose up -d
+services:
+  waha:
+    image: devlikeapro/waha
+    container_name: mywaha
+    restart: unless-stopped
+    ports:
+      - "3030:3000"
+    environment:
+      WAHA_API_KEY: ${WAHA_API_KEY:?Define WAHA_API_KEY en waha/.env}
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME:-admin}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD:?Define WAHA_DASHBOARD_PASSWORD en waha/.env}
+      WHATSAPP_SWAGGER_USERNAME: ${WAHA_DASHBOARD_USERNAME:-admin}
+      WHATSAPP_SWAGGER_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
+      # La sesión arranca sola y el webhook queda registrado: solo falta escanear el QR.
+      WHATSAPP_START_SESSION: default
+      WHATSAPP_HOOK_URL: ${WHATSAPP_HOOK_URL:-http://host.docker.internal:8090/waha/webhook}
+      WHATSAPP_HOOK_EVENTS: message
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # necesario en Linux
+    volumes:
+      - waha_sessions:/app/.sessions          # conserva el login de WhatsApp entre reinicios
+
+volumes:
+  waha_sessions:
