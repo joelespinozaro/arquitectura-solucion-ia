@@ -62,7 +62,7 @@ pip install -r requirements.txt
 python -m src.main          # :8090
 ```
 
-Al iniciar, WAHA muestra en su terminal la API key y el usuario y clave del dashboard. Copia la API key al `.env` del Gateway. Luego, en `http://localhost:3030/dashboard`: inicia la sesión `default`, escanea el QR con un número de pruebas y en Configuration registra el webhook `http://host.docker.internal:8090/waha/webhook` con el evento `message`. En Linux usa la IP local de tu máquina en lugar de `host.docker.internal`. Guía corta de WAHA: https://joelespinozaro.github.io/ai-solution-architect/m4-s2/waha/
+Al iniciar, WAHA muestra en su terminal la API key y el usuario y clave del dashboard. Copia la API key al `.env` del Gateway. Luego, en `http://localhost:3030/dashboard`: inicia la sesión `default`, escanea el QR con un número de pruebas y en Configuration registra el webhook `http://host.docker.internal:8090/waha/webhook` con el evento `message`. En Linux usa la IP local de tu máquina en lugar de `host.docker.internal`.
 
 Para pasar a la siguiente parte: `git switch m4-s2-p2-skills` y reinicia el Agent API.
 
