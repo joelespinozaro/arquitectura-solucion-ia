@@ -262,7 +262,7 @@ class AgentService:
             middleware=[
                 LoggingMiddleware(),                      # 1° logging granular de cada LLM call
                 TokenBudgetMiddleware(budget=TOKEN_BUDGET), # 2° control de presupuesto de tokens
-                SafetyGuardMiddleware(),                  # 3° guardia de contenido prohibido
+                SafetyGuardMiddleware(protected_texts=[SYSTEM_PROMPT]),  # 3° política de seguridad (entrada y salida)
                 RetryMiddleware(max_retries=3),           # 4° reintentos ante errores transitorios
                 SkillMiddleware(),                        # 5° inyección de skills (progressive disclosure)
             ],
