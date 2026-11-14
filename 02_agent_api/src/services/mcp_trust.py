@@ -122,7 +122,7 @@ def filter_trusted_tools(
         if verdict.ok:
             accepted.append(tool)
             continue
-        logger.error("mcp_trust tool_rechazada server=%s tool=%s razones=%s mode=%s", server, tool.name, verdict.reasons, mode)
+        logger.error("mcp_trust tool_rechazada server=%s herramienta=%s razones=%s mode=%s", server, tool.name, verdict.reasons, mode)
         if mode != "enforce":
             accepted.append(tool)
     return accepted
