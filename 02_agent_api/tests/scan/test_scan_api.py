@@ -159,3 +159,20 @@ def test_variantes_de_inyeccion_se_bloquean(client, texto):
 )
 def test_frases_normales_no_se_bloquean(client, texto):
     assert post_input(client, texto)["decision"] == "allow"
+
+
+def test_filtro_de_logs_no_enmascara_identificadores_de_auditoria(monkeypatch):
+    """Regresión: el NLP de Presidio llegó a enmascarar el audit_id completo."""
+    from src.utils import pii_log_filter as plf
+    from src.utils.pii import PIIMatch
+
+    class TodoEsPII:
+        def analyze(self, text, threshold):
+            return [PIIMatch("PERSON", 0, len(text), 0.99)] if text else []
+
+    monkeypatch.setattr(plf, "get_shared_pii_detector", lambda: (TodoEsPII(), "stub"))
+    flt = plf.PIIRedactionFilter()
+    rec = logging.makeLogRecord({"msg": "hola", "audit_id": "aud_abcdefghijkl", "text_hash": "h_abcdefghijkl", "otro": "dato"})
+    flt.filter(rec)
+    assert rec.audit_id == "aud_abcdefghijkl" and rec.text_hash == "h_abcdefghijkl"
+    assert rec.otro != "dato"

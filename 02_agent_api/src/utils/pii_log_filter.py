@@ -27,6 +27,11 @@ from src.utils.pii import get_pii_score_threshold, get_shared_pii_detector, mask
 
 _RESERVED_LOG_RECORD_ATTRS = set(vars(logging.makeLogRecord({})).keys())
 
+# Campos estructurados que son identificadores generados por el sistema, nunca PII.
+# El motor NLP a veces los toma por una entidad y los enmascararía, rompiendo la
+# trazabilidad de la auditoría.
+_SAFE_EXTRA_KEYS = {"audit_id", "text_hash"}
+
 
 class PIIRedactionFilter(logging.Filter):
     def __init__(self) -> None:
@@ -52,7 +57,7 @@ class PIIRedactionFilter(logging.Filter):
                 record.args = ()
 
             for key, value in list(record.__dict__.items()):
-                if key in _RESERVED_LOG_RECORD_ATTRS or not isinstance(value, str):
+                if key in _RESERVED_LOG_RECORD_ATTRS or key in _SAFE_EXTRA_KEYS or not isinstance(value, str):
                     continue
                 redacted_value = self._redact_text(value)
                 if redacted_value != value:

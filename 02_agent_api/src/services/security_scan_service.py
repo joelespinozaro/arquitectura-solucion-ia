@@ -17,7 +17,8 @@ Decisiones de diseño:
 """
 import hashlib
 import re
-import uuid
+import secrets
+import string
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
@@ -63,9 +64,17 @@ class ScanResult:
     audit_id: str = ""
 
 
+_HEX_A_LETRAS = str.maketrans("0123456789", "ghijklmnop")
+
+
 def _hash(text: str) -> str:
-    # Prefijo con letra y "_": el filtro de PII de los logs no lo confunde con un DNI.
-    return "h_" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    # Solo letras: el filtro de PII de los logs confunde las rachas de dígitos
+    # con teléfonos o tarjetas y corrompería el identificador.
+    return "h_" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:12].translate(_HEX_A_LETRAS)
+
+
+def _new_audit_id() -> str:
+    return "aud_" + "".join(secrets.choice(string.ascii_lowercase) for _ in range(12))
 
 
 def _pii_matches(text: str) -> List[PIIMatch]:
@@ -112,7 +121,7 @@ def _finish(
         decision = "mask"
     else:
         decision = "allow"
-    audit_id = "aud_" + uuid.uuid4().hex[:12]
+    audit_id = _new_audit_id()
     logger.info(
         "scan_%s decision=%s pii_mode=%s text_hash=%s length=%d findings=%s audit_id=%s",
         kind,
