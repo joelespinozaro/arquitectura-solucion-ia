@@ -328,6 +328,77 @@ class AgentService:
             "files": files,
         }
 
+    async def chat_stream(self, question: str, user: str, session_id: Optional[str]):
+        """Igual que chat(), pero emite eventos mientras el agente trabaja (SSE).
+
+        Eventos: session, skill, tool_start, tool_end, done, error.
+        La respuesta NO se emite token a token: se entrega completa en `done`,
+        después de que OutputGuardrail y SafetyGuard pudieron revisarla. Streamear
+        tokens crudos dejaría salir un secreto o el canary antes del filtro."""
+        is_new_session = not session_id
+        session_id = session_id or str(uuid.uuid4())
+        trace_id = str(uuid.uuid4())
+        yield {"type": "session", "session_id": session_id, "trace_id": trace_id}
+
+        history_records = [] if is_new_session else self._repo.get_by_session_id(session_id, limit=HISTORY_LIMIT)
+        history_messages: List[BaseMessage] = []
+        for record in history_records:
+            history_messages.append(HumanMessage(content=record.question))
+            history_messages.append(AIMessage(content=record.answer))
+
+        t0 = time.perf_counter()
+        seen_calls: set = set()
+        collected: Dict[str, BaseMessage] = {}   # id -> mensaje (una réplica posterior reemplaza a la anterior)
+        order: List[str] = []
+        try:
+            async for chunk in _agent.astream(
+                {"messages": [*history_messages, HumanMessage(content=question)]},
+                stream_mode="updates",
+            ):
+                for update in chunk.values():
+                    for message in (update or {}).get("messages", []) if isinstance(update, dict) else []:
+                        mid = getattr(message, "id", None) or f"anon-{len(order)}"
+                        if mid not in collected:
+                            order.append(mid)
+                        collected[mid] = message
+                        if isinstance(message, AIMessage):
+                            for call in message.tool_calls or []:
+                                if call["id"] in seen_calls:
+                                    continue
+                                seen_calls.add(call["id"])
+                                if call["name"] == "load_skill":
+                                    yield {"type": "skill", "id": call["id"],
+                                           "name": (call.get("args") or {}).get("skill_name", "")}
+                                else:
+                                    yield {"type": "tool_start", "id": call["id"], "tool": call["name"],
+                                           "label": _tool_source_label(call["name"]), "input": call.get("args")}
+                        elif isinstance(message, ToolMessage):
+                            yield {"type": "tool_end", "id": message.tool_call_id, "tool": message.name or "tool",
+                                   "ok": getattr(message, "status", "success") != "error"}
+        except Exception as exc:  # el stream ya empezó: se informa como evento, no como 500
+            logger.exception("Error en chat_stream")
+            yield {"type": "error", "message": "No pude completar la respuesta. Intenta de nuevo."}
+            return
+
+        agent_response = {"messages": [collected[i] for i in order]}
+        result = self._parse_agent_response(agent_response)
+        answer = result["answer"] if isinstance(result["answer"], str) else _stringify_tool_content(result["answer"])
+        sources, files = self._extract_sources_and_files(agent_response)
+        elapsed_ms = round((time.perf_counter() - t0) * 1000)
+
+        self._repo.save(
+            History(
+                trace_id=trace_id, session_id=session_id, question=question, answer=answer,
+                input_tokens=result["input_tokens"], output_tokens=result["output_tokens"], user=user,
+                sources=json.dumps(sources, ensure_ascii=False) if sources else None,
+            )
+        )
+        logger.info("Chat stream finalizado", extra={"trace_id": trace_id, "session_id": session_id,
+                                                    "t_agent_ms": elapsed_ms, "sources_count": len(sources)})
+        yield {"type": "done", "answer": answer, "session_id": session_id, "trace_id": trace_id,
+               "sources": sources, "files": files, "elapsed_ms": elapsed_ms,
+               "input_tokens": result["input_tokens"], "output_tokens": result["output_tokens"]}
+
     @staticmethod
     def _extract_sources_and_files(
         agent_response: dict,

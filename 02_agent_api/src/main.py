@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import uvicorn
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -80,6 +83,12 @@ app.include_router(errors_router)
 app.include_router(feedback_router)
 app.include_router(evaluate_router)
 app.include_router(scan_router)
+
+# Web chat (06_web_chat): si la carpeta existe (repo completo o WEB_CHAT_DIR), se sirve en /chat/
+_web_dir = Path(os.getenv("WEB_CHAT_DIR") or Path(__file__).resolve().parents[2] / "06_web_chat")
+if (_web_dir / "index.html").is_file():
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/chat", StaticFiles(directory=_web_dir, html=True), name="web_chat")
 
 if __name__ == "__main__":
     logger.info("Iniciando servidor en puerto 8080")
