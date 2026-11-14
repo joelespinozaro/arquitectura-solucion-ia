@@ -78,3 +78,8 @@ if GOOGLE_APPLICATION_CREDENTIALS:
 
 # Hooks (parte 3): presupuesto de tokens por conversación
 TOKEN_BUDGET: int = config("TOKEN_BUDGET", default=8000, cast=int)
+
+# Confianza en servidores MCP (ver src/services/mcp_trust.py): enforce | warn | off
+MCP_TRUST_MODE: str = config("MCP_TRUST_MODE", default="warn")
+# Lista separada por comas de servidores MCP permitidos (vacío = sin restricción)
+MCP_ALLOWED_SERVERS: list[str] = [s.strip() for s in config("MCP_ALLOWED_SERVERS", default="").split(",") if s.strip()]
