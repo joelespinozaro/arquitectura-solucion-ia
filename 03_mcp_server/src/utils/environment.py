@@ -15,4 +15,5 @@ QDRANT_COLLECTION_NAME: str = config("QDRANT_COLLECTION_NAME", default="document
 SUPERHERO_API_BASE_URL: str = config(
     "SUPERHERO_API_BASE_URL", default="https://www.superheroapi.com/api.php"
 )
-SUPERHERO_API_TOKEN: str = config("SUPERHERO_API_TOKEN")
+# Opcional: solo lo usan las tools de héroes. Sin token el servidor arranca igual.
+SUPERHERO_API_TOKEN: str = config("SUPERHERO_API_TOKEN", default="")
