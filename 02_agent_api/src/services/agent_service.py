@@ -245,6 +245,12 @@ class SkillMiddleware(AgentMiddleware):
         return await handler(modified_request)
 
 
+# Tokens acumulados por sesión. Vive en memoria del proceso (AgentService se crea por
+# petición, así que el contador no puede ser un atributo de instancia). Se pierde si
+# reinicias el API. En producción iría a Redis o a la base de datos.
+_SESSION_TOKENS: Dict[str, int] = {}
+
+
 class AgentService:
     def __init__(self, db: Session) -> None:
         self._repo = HistoryRepository(db)
@@ -287,8 +293,17 @@ class AgentService:
             history_messages.append(AIMessage(content=record.answer))
 
         t0 = time.perf_counter()
+        tokens_before = _SESSION_TOKENS.get(session_id, 0)
         agent_response = await self._agent.ainvoke(
-            {"messages": [*history_messages, HumanMessage(content=question)]}
+            {
+                "messages": [*history_messages, HumanMessage(content=question)],
+                "token_count": tokens_before,  # el presupuesto sigue corriendo entre mensajes
+            }
+        )
+        _SESSION_TOKENS[session_id] = agent_response.get("token_count", tokens_before)
+        logger.info(
+            "Presupuesto de la sesión",
+            extra={"session_id": session_id, "tokens_sesion": _SESSION_TOKENS[session_id], "budget": TOKEN_BUDGET},
         )
         result = self._parse_agent_response(agent_response)
         retrieved_contexts = self._extract_retrieved_contexts(agent_response)
