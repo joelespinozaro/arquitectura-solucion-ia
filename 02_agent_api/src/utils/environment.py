@@ -85,3 +85,9 @@ SCAN_API_KEY: str | None = config("SCAN_API_KEY", default=None)
 MCP_TRUST_MODE: str = config("MCP_TRUST_MODE", default="warn")
 # Lista separada por comas de servidores MCP permitidos (vacío = sin restricción)
 MCP_ALLOWED_SERVERS: list[str] = [s.strip() for s in config("MCP_ALLOWED_SERVERS", default="").split(",") if s.strip()]
+
+# Salida del modelo (OutputGuardrail): modo de PII (block | mask | off) y canary token.
+# El canary se inserta en el system prompt: si aparece en una respuesta, hubo fuga del prompt.
+# Si no se define, se genera uno aleatorio por proceso.
+OUTPUT_PII_MODE: str = config("OUTPUT_PII_MODE", default="off")
+CANARY_TOKEN: str = config("CANARY_TOKEN", default="") or "CNRY-" + __import__("secrets").token_hex(6)
