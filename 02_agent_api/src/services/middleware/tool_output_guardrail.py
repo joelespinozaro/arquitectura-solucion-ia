@@ -45,7 +45,7 @@ def _review(result: Any, tool_name: str) -> Any:
     if verdict.decision != "block":
         return result
     logger.warning(
-        "tool_output_bloqueado tool=%s findings=%s audit_id=%s",
+        "tool_output_bloqueado herramienta=%s findings=%s audit_id=%s",
         tool_name,
         [f"{f.layer}:{f.category}" for f in verdict.findings],
         verdict.audit_id,
