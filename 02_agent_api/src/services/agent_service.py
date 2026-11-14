@@ -46,7 +46,7 @@ def _build_hooks() -> list:
     return [
         LoggingMiddleware(),                         # 1° logging de cada llamada al LLM
         TokenBudgetMiddleware(budget=TOKEN_BUDGET),  # 2° presupuesto de tokens
-        SafetyGuardMiddleware(),                     # 3° guardia de contenido en la salida
+        SafetyGuardMiddleware(protected_texts=[SYSTEM_PROMPT]),  # 3° política de seguridad (entrada y salida)
         RetryMiddleware(max_retries=3),              # 4° reintentos ante errores transitorios
     ]
 
