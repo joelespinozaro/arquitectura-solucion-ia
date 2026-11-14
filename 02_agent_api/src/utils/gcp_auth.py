@@ -40,12 +40,23 @@ def cloud_run_audience(url: str) -> str:
     return urlunsplit((parsed.scheme, parsed.netloc, "", "", ""))
 
 
+_HOSTS_LOCALES = {"localhost", "127.0.0.1", "::1", "0.0.0.0"}
+
+
+def es_url_local(url: str) -> bool:
+    """True si la URL apunta a esta misma máquina (desarrollo local)."""
+    return (urlsplit(url).hostname or "") in _HOSTS_LOCALES
+
+
 class GoogleIDTokenAuth(httpx.Auth):
     """Agrega `Authorization: Bearer <ID token>` para la audiencia dada,
     refrescando el token cuando está por expirar."""
 
     def __init__(self, audience: str) -> None:
         self._audience = audience
+        # En local no hay Cloud Run ni credenciales de Google: pedir el token
+        # solo hace esperar al servidor de metadatos en cada petición.
+        self._habilitado = not es_url_local(audience)
         self._token: Optional[str] = None
         self._expiry: float = 0.0
 
@@ -76,7 +87,7 @@ class GoogleIDTokenAuth(httpx.Auth):
         return self._token
 
     def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
-        token = self._get_valid_token()
+        token = self._get_valid_token() if self._habilitado else None
         if token:
             request.headers["Authorization"] = f"Bearer {token}"
         yield request
