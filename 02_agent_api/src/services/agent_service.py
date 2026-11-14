@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 import uuid
 
 from langchain.agents import create_agent
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage, convert_to_messages
 from langchain_openai import ChatOpenAI
 from sqlalchemy.orm import Session
 
@@ -144,6 +144,8 @@ class AgentService:
             ):
                 for update in chunk.values():
                     for message in (update or {}).get("messages", []) if isinstance(update, dict) else []:
+                        if isinstance(message, dict):  # los guardrails devuelven {"role", "content"}
+                            message = convert_to_messages([message])[0]
                         mid = getattr(message, "id", None) or f"anon-{len(order)}"
                         if mid not in collected:
                             order.append(mid)
