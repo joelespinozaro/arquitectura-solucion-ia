@@ -362,11 +362,15 @@ class AgentService:
         collected: Dict[str, BaseMessage] = {}   # id -> mensaje (una réplica posterior reemplaza a la anterior)
         order: List[str] = []
         try:
+            tokens_before = _SESSION_TOKENS.get(session_id, 0)
             async for chunk in _agent.astream(
-                {"messages": [*history_messages, HumanMessage(content=question)]},
+                {"messages": [*history_messages, HumanMessage(content=question)],
+                 "token_count": tokens_before},
                 stream_mode="updates",
             ):
                 for update in chunk.values():
+                    if isinstance(update, dict) and "token_count" in update:
+                        _SESSION_TOKENS[session_id] = update["token_count"]
                     for message in (update or {}).get("messages", []) if isinstance(update, dict) else []:
                         mid = getattr(message, "id", None) or f"anon-{len(order)}"
                         if mid not in collected:
