@@ -22,6 +22,8 @@ jobs:
           cache: pip
           cache-dependency-path: 02_agent_api/requirements.txt
       - run: pip install -r requirements.txt
+      - name: Variables de entorno de ejemplo
+        run: cp .env.example .env
       - name: Tests (incluye red team determinista)
         env:
           OPENAI_API_KEY: sk-test
