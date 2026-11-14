@@ -7,7 +7,7 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
 from langchain.messages import SystemMessage
 from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage, convert_to_messages
 from langchain_openai import ChatOpenAI
 from sqlalchemy.orm import Session
 
@@ -382,6 +382,8 @@ class AgentService:
                     if isinstance(update, dict) and "token_count" in update:
                         _SESSION_TOKENS[session_id] = update["token_count"]
                     for message in (update or {}).get("messages", []) if isinstance(update, dict) else []:
+                        if isinstance(message, dict):  # los guardrails devuelven {"role", "content"}
+                            message = convert_to_messages([message])[0]
                         mid = getattr(message, "id", None) or f"anon-{len(order)}"
                         if mid not in collected:
                             order.append(mid)
