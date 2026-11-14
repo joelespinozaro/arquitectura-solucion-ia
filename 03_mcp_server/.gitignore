@@ -2,3 +2,6 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Solicitudes de asesoría generadas en ejecución
+data/asesorias.jsonl

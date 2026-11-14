@@ -1,0 +1,7 @@
+[
+  {"dni": "90000001", "nombre": "Lucía Mendoza Quispe", "programa": "Data Engineer", "estado": "Matriculado", "proxima_cuota": {"fecha": "2026-12-05", "monto_soles": 450}, "correo": "lucia.ficticia@example.com", "telefono": "900000001"},
+  {"dni": "90000002", "nombre": "Carlos Rojas Huamán", "programa": "ML Engineer", "estado": "Pendiente de pago", "proxima_cuota": {"fecha": "2026-11-20", "monto_soles": 520}, "correo": "carlos.ficticio@example.com", "telefono": "900000002"},
+  {"dni": "90000003", "nombre": "María Fernanda Salas Vega", "programa": "Data Visualization", "estado": "Matriculado", "proxima_cuota": {"fecha": "2026-12-01", "monto_soles": 380}, "correo": "maria.ficticia@example.com", "telefono": "900000003"},
+  {"dni": "90000004", "nombre": "Jorge Paredes Linares", "programa": "Data Architect", "estado": "Retirado", "proxima_cuota": null, "correo": "jorge.ficticio@example.com", "telefono": "900000004"},
+  {"dni": "90000005", "nombre": "Ana Torres Calderón", "programa": "Marketing Analytics", "estado": "Matriculado", "proxima_cuota": {"fecha": "2026-12-10", "monto_soles": 400}, "correo": "ana.ficticia@example.com", "telefono": "900000005"}
+]
