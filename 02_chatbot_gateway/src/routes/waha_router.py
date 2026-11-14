@@ -20,7 +20,7 @@ async def send_waha_message(user: str, message: str, session: str):
                 }
             )
             response.raise_for_status()
-            return response.json()
+            return response.json() if response.content else {}
     except Exception as e:
         print(f"Error sending message to WAHA: {str(e)}")
         return None
@@ -41,7 +41,7 @@ async def send_waha_sendSeen(request: WahaRequest):
                 }
             )
             response.raise_for_status()
-            return response.json()
+            return response.json() if response.content else {}
         print("sendSeen sent")
     except Exception as e:
         print(f"Error sending message to WAHA: {str(e)}")
@@ -63,7 +63,7 @@ async def send_waha_presence(request: WahaRequest, presence: str):
                 }
             )
             response.raise_for_status()
-            return response.json()
+            return response.json() if response.content else {}
     except Exception as e:
         print(f"Error sending message to WAHA: {str(e)}")
         return None
