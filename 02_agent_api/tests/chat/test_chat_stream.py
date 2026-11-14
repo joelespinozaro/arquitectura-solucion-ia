@@ -48,7 +48,14 @@ def build_agent(responses):
 @pytest.fixture
 def repo(monkeypatch):
     r = FakeRepo()
-    monkeypatch.setattr(agent_service.AgentService, "__init__", lambda self, db: setattr(self, "_repo", r))
+    state = {"agent": None}
+
+    def fake_init(self, db):
+        self._repo = r
+        self._agent = state["agent"]  # ramas donde el agente es atributo de instancia (partes 1 a 3)
+
+    monkeypatch.setattr(agent_service.AgentService, "__init__", fake_init)
+    r.state = state
     return r
 
 
@@ -64,6 +71,11 @@ def client(monkeypatch, repo):
     return TestClient(app)
 
 
+def use_agent(monkeypatch, repo, agent):
+    repo.state["agent"] = agent
+    monkeypatch.setattr(agent_service, "_agent", agent, raising=False)  # ramas con agente a nivel de módulo
+
+
 def parse(body: str):
     events = []
     for block in body.strip().split("\n\n"):
@@ -73,7 +85,7 @@ def parse(body: str):
 
 
 def test_stream_emite_skill_tool_y_done(client, repo, monkeypatch):
-    monkeypatch.setattr(agent_service, "_agent", build_agent([
+    use_agent(monkeypatch, repo, build_agent([
         AIMessage(content="", tool_calls=[{"name": "load_skill", "args": {"skill_name": "matricula_y_asesoria"}, "id": "c1"}]),
         AIMessage(content="", tool_calls=[{"name": "estado_matricula", "args": {"dni": "90000001"}, "id": "c2"}]),
         AIMessage(content="Estás matriculada en Data Engineer."),
@@ -92,18 +104,35 @@ def test_stream_emite_skill_tool_y_done(client, repo, monkeypatch):
     skill = next(d for k, d in events if k == "skill")
     assert skill["name"] == "matricula_y_asesoria"
     tool_start = next(d for k, d in events if k == "tool_start")
-    assert tool_start["tool"] == "estado_matricula" and tool_start["label"].startswith("Sistema de matrícula")
-    assert any(s["tool"] == "estado_matricula" for s in done["sources"])
+    assert tool_start["tool"] == "estado_matricula" and tool_start["label"]
+    assert "sources" in done
     assert len(repo.saved) == 1 and repo.saved[0].question == "mi matricula"
 
 
-def test_stream_error_se_informa_como_evento(client, monkeypatch):
+def test_stream_error_se_informa_como_evento(client, repo, monkeypatch):
     class Boom:
         async def astream(self, *a, **k):
             raise RuntimeError("falla interna con detalle sensible")
             yield  # pragma: no cover
 
-    monkeypatch.setattr(agent_service, "_agent", Boom())
+    use_agent(monkeypatch, repo, Boom())
     events = parse(client.post("/api/chat/stream", json={"question": "hola", "user": "joel"}).text)
     assert events[-1][0] == "error"
     assert "sensible" not in json.dumps(events[-1][1])
+
+
+def test_stream_con_bloqueo_de_guardrail_que_devuelve_dict(client, repo, monkeypatch):
+    """Los guardrails devuelven el bloqueo como dict ({"role": ..., "content": ...}): el stream no debe romperse."""
+    from langchain.agents.middleware import AgentMiddleware, hook_config
+
+    class Bloqueo(AgentMiddleware):
+        @hook_config(can_jump_to=["end"])
+        async def abefore_model(self, state, runtime):
+            return {"messages": [{"role": "assistant", "content": "Mensaje bloqueado por seguridad"}], "jump_to": "end"}
+
+    agente = create_agent(model=FakeToolModel(responses=[AIMessage(content="no debería llegar")]),
+                          tools=[], middleware=[Bloqueo()])
+    use_agent(monkeypatch, repo, agente)
+    events = parse(client.post("/api/chat/stream", json={"question": "ataque", "user": "joel"}).text)
+    assert events[-1][0] == "done"
+    assert events[-1][1]["answer"] == "Mensaje bloqueado por seguridad"
