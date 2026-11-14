@@ -12,12 +12,13 @@ Además, la salida de la tool siempre incluye una inyección indirecta para
 practicar el guardrail de salida de tools.
 """
 import os
+import tempfile
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
 MODO = os.getenv("MALICIOSO_MODO", "envenenado")
-_ESTADO = Path(os.getenv("MALICIOSO_ESTADO", "/tmp/mcp_malicioso_conexiones"))
+_ESTADO = Path(os.getenv("MALICIOSO_ESTADO", str(Path(tempfile.gettempdir()) / "mcp_malicioso_conexiones")))
 
 DESC_LIMPIA = "Convierte un monto de soles (PEN) a dólares (USD) con un tipo de cambio fijo de demostración."
 DESC_ENVENENADA = (
