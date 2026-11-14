@@ -63,10 +63,10 @@ Requisitos: Python 3.11+, Docker, una API key de OpenAI, PostgreSQL y Qdrant con
 git clone <url-de-este-repo>
 cd <carpeta-del-repo>
 
-# 1. WAHA
-mkdir waha && cd waha
-docker run --rm -v "$(pwd)":/app/env devlikeapro/waha init-waha /app/env
-docker run -d --name mywaha -p 3030:3000 --env-file .env devlikeapro/waha
+# 1. WAHA (sin rutas dentro de comandos: sirve en Git Bash, PowerShell, macOS y Linux)
+cd waha
+cp .env.example .env        # cambia WAHA_API_KEY y WAHA_DASHBOARD_PASSWORD
+docker compose up -d
 cd ..
 
 # 2. Agent API (terminal 1)
@@ -84,9 +84,19 @@ pip install -r requirements.txt
 python -m src.main          # :8090
 ```
 
-Luego, en `http://localhost:3030/dashboard`: inicia la sesión `default`, escanea el QR con un número de pruebas y registra el webhook `http://host.docker.internal:8090/waha/webhook` con el evento `message`. En Linux usa la IP local de tu máquina en lugar de `host.docker.internal`.
+Luego, en `http://localhost:3030/dashboard` (usuario y clave de `waha/.env`): la sesión `default` ya arranca sola y el webhook ya está registrado. Solo escanea el QR con un número de pruebas.
 
-Para pasar a la siguiente parte: `git checkout parte-2-skills` y reinicia el Agent API. El paso a paso completo de cada parte está en `docs/guia-laboratorio-sesion2.html`.
+Para pasar a la siguiente parte: `git switch m4-s2-p2-skills` y reinicia el Agent API.
+
+## Guía paso a paso
+
+La guía interactiva del laboratorio (capturas, variables y solución de errores) está publicada en
+https://joelespinozaro.github.io/ai-solution-architect/m4-s2/laboratorio/ y la de conceptos en
+https://joelespinozaro.github.io/ai-solution-architect/m4-s2/. Ya no vive dentro de este repositorio: así hay una sola versión.
+
+### Si WAHA falla con "target directory does not exist"
+
+Pasaba con `docker run -v "$(pwd)":/app/env ... init-waha /app/env` en Git Bash de Windows, que convierte `/app/env` en una ruta de Windows. Con `docker compose` ya no ocurre. Si usas el comando antiguo, anteponle `MSYS_NO_PATHCONV=1`.
 
 ## Seguridad
 
