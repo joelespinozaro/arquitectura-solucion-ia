@@ -14,46 +14,27 @@ En la Sesión 1 el asistente del instituto aprendió a razonar, usar tools y res
 
 ## Guías
 
-- `docs/guia-sesion2-skills-hooks.html`: los conceptos de la sesión con artefactos interactivos y un resumen del laboratorio.
-- `docs/guia-laboratorio-sesion2.html`: **el paso a paso del lab**. Cómo crear cada API key, los `.env` listos para copiar, los comandos para Linux, macOS y Windows, y los errores frecuentes.
+Las guías interactivas viven publicadas (una sola versión):
 
-Descárgalas y ábrelas en el navegador.
+- Conceptos de la sesión: https://joelespinozaro.github.io/ai-solution-architect/m4-s2/
+- Paso a paso del laboratorio: https://joelespinozaro.github.io/ai-solution-architect/m4-s2/laboratorio/
 
-## Arquitectura
+## Carpetas
 
-```
- Celular del alumno
-        │  WhatsApp
-        ▼
- ┌──────────────┐  webhook   ┌────────────────────┐  POST /api/chat  ┌──────────────────────────────┐
- │ WAHA  :3030  │ ─────────▶ │ Gateway  :8090     │ ───────────────▶ │ Agent API  :8080             │
- │ (Docker)     │ ◀───────── │ 02_chatbot_gateway │ ◀─────────────── │ 02_agent_api                 │
- └──────────────┘  sendText  └────────────────────┘    respuesta     │  guardrails → middlewares →  │
-                                                                     │  skills → LLM → tools        │
-                                                                     └──────┬───────────────┬───────┘
-                                                                            │               │ stdio (parte 4)
-                                                                     PostgreSQL       03_mcp_server
-                                                                     (historial)      skills/*/SKILL.md
-                                                                                      retrieve_documents → Qdrant
-```
-
-- **WAHA** expone un número de WhatsApp como API REST y avisa cada mensaje por webhook.
-- **02_chatbot_gateway** traduce entre WhatsApp y el agente: marca leído, muestra «escribiendo…», llama al agente y envía la respuesta.
-- **02_agent_api** es el agente (LangChain `create_agent`). Cada parte le suma una capa.
-- **03_mcp_server** (desde la parte 4) publica las skills como archivos `SKILL.md` y la búsqueda en Qdrant como tool MCP.
+- **waha** levanta WhatsApp como API con `docker compose`.
 - **01_data_setup** crea las tablas de PostgreSQL y carga los documentos del instituto en Qdrant. Si ya lo hiciste en la sesión de RAG, puedes saltarlo.
 
 ## Una rama por parte
 
-Cada rama suma una capa a la anterior. Para ver qué cambió entre dos partes: `git diff parte-2-skills parte-3-hooks -- 02_agent_api`.
+Cada rama suma una capa a la anterior. Para ver qué cambió entre dos partes: `git diff m4-s2-p2-skills m4-s2-p3-hooks -- 02_agent_api`.
 
 | Rama | Qué agrega | Qué observar |
 |---|---|---|
-| `main` | Parte 1: agente con RAG + WhatsApp (WAHA + gateway) | Un mensaje de ida y vuelta desde tu celular |
-| `parte-2-skills` | `SkillMiddleware` y la tool `load_skill` | En el log, `load_skill` aparece solo cuando la pregunta lo necesita |
-| `parte-3-hooks` | Middlewares de logging, `TokenBudget`, `SafetyGuard` y `Retry` | El orden de ida y vuelta en la consola, y el corte por presupuesto |
-| `parte-4-guardrails` | 8 capas de guardrails, skills servidas por MCP, `pytest` | Qué capa bloquea cada ataque y `pytest tests/guardrails -q` |
-| `parte-5-produccion` | Opcional: Model Armor, evaluación con RAGAS y despliegue en GCP | Ver `DEPLOYMENT.md` |
+| `m4-s2-p1-base` | Parte 1: agente con RAG + WhatsApp (WAHA + gateway) | Un mensaje de ida y vuelta desde tu celular |
+| `m4-s2-p2-skills` | `SkillMiddleware` y la tool `load_skill` | En el log, `load_skill` aparece solo cuando la pregunta lo necesita |
+| `m4-s2-p3-hooks` | Middlewares de logging, `TokenBudget`, `SafetyGuard` y `Retry` | El orden de ida y vuelta en la consola, y el corte por presupuesto |
+| `m4-s2-p4-guardrails` | 8 capas de guardrails, skills servidas por MCP, `pytest` | Qué capa bloquea cada ataque y `pytest tests/guardrails -q` |
+| `m4-s2-p5-produccion` | Opcional: Model Armor, evaluación con RAGAS y despliegue en GCP | Ver `DEPLOYMENT.md` |
 
 ## Cómo empezar
 
@@ -63,10 +44,10 @@ Requisitos: Python 3.11+, Docker, una API key de OpenAI, PostgreSQL y Qdrant con
 git clone <url-de-este-repo>
 cd <carpeta-del-repo>
 
-# 1. WAHA
-mkdir waha && cd waha
-docker run --rm -v "$(pwd)":/app/env devlikeapro/waha init-waha /app/env
-docker run -d --name mywaha -p 3030:3000 --env-file .env devlikeapro/waha
+# 1. WAHA (sin rutas dentro de comandos: sirve en Git Bash, PowerShell, macOS y Linux)
+cd waha
+cp .env.example .env        # cambia WAHA_API_KEY y WAHA_DASHBOARD_PASSWORD
+docker compose up -d
 cd ..
 
 # 2. Agent API (terminal 1)
@@ -84,9 +65,19 @@ pip install -r requirements.txt
 python -m src.main          # :8090
 ```
 
-Luego, en `http://localhost:3030/dashboard`: inicia la sesión `default`, escanea el QR con un número de pruebas y registra el webhook `http://host.docker.internal:8090/waha/webhook` con el evento `message`. En Linux usa la IP local de tu máquina en lugar de `host.docker.internal`.
+Luego, en `http://localhost:3030/dashboard` (usuario y clave de `waha/.env`): la sesión `default` ya arranca sola y el webhook ya está registrado. Solo escanea el QR con un número de pruebas.
 
-Para pasar a la siguiente parte: `git checkout parte-2-skills` y reinicia el Agent API. El paso a paso completo de cada parte está en `docs/guia-laboratorio-sesion2.html`.
+Para pasar a la siguiente parte: `git switch m4-s2-p2-skills` y reinicia el Agent API.
+
+## Guía paso a paso
+
+La guía interactiva del laboratorio (capturas, variables y solución de errores) está publicada en
+https://joelespinozaro.github.io/ai-solution-architect/m4-s2/laboratorio/ y la de conceptos en
+https://joelespinozaro.github.io/ai-solution-architect/m4-s2/. Ya no vive dentro de este repositorio: así hay una sola versión.
+
+### Si WAHA falla con "target directory does not exist"
+
+Pasaba con `docker run -v "$(pwd)":/app/env ... init-waha /app/env` en Git Bash de Windows, que convierte `/app/env` en una ruta de Windows. Con `docker compose` ya no ocurre. Si usas el comando antiguo, anteponle `MSYS_NO_PATHCONV=1`.
 
 ## Seguridad
 
