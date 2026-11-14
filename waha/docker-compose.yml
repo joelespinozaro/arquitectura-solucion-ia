@@ -14,10 +14,8 @@ services:
       WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD:?Define WAHA_DASHBOARD_PASSWORD en waha/.env}
       WHATSAPP_SWAGGER_USERNAME: ${WAHA_DASHBOARD_USERNAME:-admin}
       WHATSAPP_SWAGGER_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
-      # La sesión arranca sola y el webhook queda registrado: solo falta escanear el QR.
-      WHATSAPP_START_SESSION: default
-      WHATSAPP_HOOK_URL: ${WHATSAPP_HOOK_URL:-http://host.docker.internal:8090/waha/webhook}
-      WHATSAPP_HOOK_EVENTS: message
+      # La sesión y el webhook se configuran en el dashboard (no aquí): un webhook global
+      # más el de la sesión haría que el agente respondiera dos veces cada mensaje.
     extra_hosts:
       - "host.docker.internal:host-gateway"   # necesario en Linux
     volumes:
