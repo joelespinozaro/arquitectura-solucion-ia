@@ -21,7 +21,6 @@ Las guías interactivas viven publicadas (una sola versión):
 
 ## Carpetas
 
-- **waha** levanta WhatsApp como API con `docker compose`.
 - **01_data_setup** crea las tablas de PostgreSQL y carga los documentos del instituto en Qdrant. Si ya lo hiciste en la sesión de RAG, puedes saltarlo.
 
 ## Una rama por parte
@@ -44,28 +43,26 @@ Requisitos: Python 3.11+, Docker, una API key de OpenAI, PostgreSQL y Qdrant con
 git clone <url-de-este-repo>
 cd <carpeta-del-repo>
 
-# 1. WAHA (sin rutas dentro de comandos: sirve en Git Bash, PowerShell, macOS y Linux)
-cd waha
-cp .env.example .env        # cambia WAHA_API_KEY y WAHA_DASHBOARD_PASSWORD
-docker compose up -d
-cd ..
+# 1. WAHA (terminal 1, déjala abierta: ahí salen las credenciales y el QR)
+docker create --name mywaha -p 3030:3000 devlikeapro/waha
+docker start -i mywaha
 
-# 2. Agent API (terminal 1)
+# 2. Agent API (terminal 2)
 cd 02_agent_api
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env        # completa OPENAI_API_KEY, DATABASE_URL y QDRANT_*
 python -m src.main          # :8080
 
-# 3. Gateway (terminal 2)
+# 3. Gateway (terminal 3)
 cd 02_chatbot_gateway
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-# crea .env con CHATBOT_API_URL, WAHA_API_URL y WAHA_API_KEY (ver el .env.example)
+# crea .env con CHATBOT_API_URL, WAHA_API_URL y WAHA_API_KEY (la que muestra WAHA al iniciar)
 python -m src.main          # :8090
 ```
 
-Luego, en `http://localhost:3030/dashboard` (usuario y clave de `waha/.env`): inicia la sesión `default`, escanea el QR con un número de pruebas y registra el webhook `http://host.docker.internal:8090/waha/webhook` con el evento `message`. En Linux usa la IP local de tu máquina en lugar de `host.docker.internal`.
+Al iniciar, WAHA muestra en su terminal la API key y el usuario y clave del dashboard. Copia la API key al `.env` del Gateway. Luego, en `http://localhost:3030/dashboard`: inicia la sesión `default`, escanea el QR con un número de pruebas y en Configuration registra el webhook `http://host.docker.internal:8090/waha/webhook` con el evento `message`. En Linux usa la IP local de tu máquina en lugar de `host.docker.internal`. Guía corta de WAHA: https://joelespinozaro.github.io/ai-solution-architect/m4-s2/waha/
 
 Para pasar a la siguiente parte: `git switch m4-s2-p2-skills` y reinicia el Agent API.
 
@@ -74,10 +71,6 @@ Para pasar a la siguiente parte: `git switch m4-s2-p2-skills` y reinicia el Agen
 La guía interactiva del laboratorio (capturas, variables y solución de errores) está publicada en
 https://joelespinozaro.github.io/ai-solution-architect/m4-s2/laboratorio/ y la de conceptos en
 https://joelespinozaro.github.io/ai-solution-architect/m4-s2/. Ya no vive dentro de este repositorio: así hay una sola versión.
-
-### Si WAHA falla con "target directory does not exist"
-
-Pasaba con `docker run -v "$(pwd)":/app/env ... init-waha /app/env` en Git Bash de Windows, que convierte `/app/env` en una ruta de Windows. Con `docker compose` ya no ocurre. Si usas el comando antiguo, anteponle `MSYS_NO_PATHCONV=1`.
 
 ## Seguridad
 
