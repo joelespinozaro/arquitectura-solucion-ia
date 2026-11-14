@@ -16,7 +16,7 @@ async def send_waha_message(user: str, message: str, session: str):
                 json=payload,
                 headers={
                     "Content-Type": "application/json",
-                    "X-Api-Key": os.getenv('WAHA_API_KEY')
+                    **({"X-Api-Key": os.getenv('WAHA_API_KEY')} if os.getenv('WAHA_API_KEY') else {})
                 }
             )
             response.raise_for_status()
@@ -37,7 +37,7 @@ async def send_waha_sendSeen(request: WahaRequest):
                 json=payload,
                 headers={
                     "Content-Type": "application/json",
-                    "X-Api-Key": os.getenv('WAHA_API_KEY')
+                    **({"X-Api-Key": os.getenv('WAHA_API_KEY')} if os.getenv('WAHA_API_KEY') else {})
                 }
             )
             response.raise_for_status()
@@ -59,7 +59,7 @@ async def send_waha_presence(request: WahaRequest, presence: str):
                 json=payload,
                 headers={
                     "Content-Type": "application/json",
-                    "X-Api-Key": os.getenv('WAHA_API_KEY')
+                    **({"X-Api-Key": os.getenv('WAHA_API_KEY')} if os.getenv('WAHA_API_KEY') else {})
                 }
             )
             response.raise_for_status()
