@@ -1,3 +1,4 @@
+import os
 import sys
 from typing import Dict, List, Tuple
 
@@ -53,8 +54,13 @@ async def load_demo_mcp_tools() -> Tuple[list, MultiServerMCPClient | None]:
     en ese venv para que esta integración funcione.
     """
     if not DEMO_MCP_SERVER_PATH:
-        logger.info("DEMO_MCP_SERVER_PATH no configurado — omitiendo integración con demo MCP server")
+        logger.info("No hay demo MCP server (no existe 03_mcp_server o DEMO_MCP_SERVER_PATH=off) — omitiendo")
         return [], None
+    if not os.path.isfile(DEMO_MCP_SERVER_PATH):
+        raise FileNotFoundError(
+            f"DEMO_MCP_SERVER_PATH apunta a un archivo que no existe: {DEMO_MCP_SERVER_PATH}. "
+            "Déjala vacía para que se busque sola en 03_mcp_server."
+        )
 
     client = MultiServerMCPClient(
         {
