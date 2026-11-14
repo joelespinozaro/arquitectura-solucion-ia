@@ -42,5 +42,6 @@ Cada rama contiene el laboratorio completo hasta esa parte. No hace falta combin
 
 ## Reglas
 
+- Probado con Python 3.13, SQLAlchemy 2.1 y psycopg 3. Las cinco partes usan las mismas versiones de base de datos.
 - Ningún secreto en el repositorio. Los `.env.example` tienen valores vacíos o de ejemplo.
 - Las ramas `m4-s2*` conservan el historial del repositorio original `modulo4-sesion2-lab`.
