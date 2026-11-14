@@ -36,6 +36,8 @@ amnesia:
   - "reset\\s+your\\s+(instructions|memory|context)"
   - "reinicia\\s+tus\\s+instrucciones"
   - "pretend\\s+(you\\s+)?(never|didn't)\\s+(saw|received)\\s+(any\\s+)?(prior|previous)\\s+instructions"
+  - "(ignora|olvida|descarta|omite)\\s+(todas\\s+)?(tus|las|esas)\\s+(instrucciones|reglas|indicaciones|restricciones)\\s+(anteriores|previas)"
+  - "(ignore|disregard|forget)\\s+(all\\s+)?(your|the|any)\\s+(previous|prior|above)\\s+(instructions|rules)"
 
 jailbreak:
   - "DAN\\s+mode"
@@ -100,3 +102,10 @@ reconocimiento:
   - "which\\s+api\\s+keys?\\s+do\\s+you\\s+use"
   - "en\\s+qu[eé]\\s+servidor\\s+corres"
   - "what\\s+server\\s+are\\s+you\\s+running\\s+on"
+
+# Inyección indirecta: instrucciones dirigidas al asistente dentro de resultados de tools o documentos
+inyeccion_indirecta:
+  - "nota\\s+para\\s+el\\s+asistente"
+  - "note\\s+to\\s+the\\s+(assistant|ai|model)"
+  - "(pide|solicita|exige)\\s+al\\s+usuario\\s+(su|sus)\\s+(dni|contrase[ñn]a|tarjeta|clave)"
+  - "(ask|tell)\\s+the\\s+user\\s+(for|to\\s+provide)\\s+(their\\s+)?(password|credit\\s+card|ssn)"

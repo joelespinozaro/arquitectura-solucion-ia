@@ -19,6 +19,7 @@ from src.services.middleware import (
     RetryMiddleware,
     SafetyGuardMiddleware,
     TokenBudgetMiddleware,
+    ToolOutputGuardrail,
 )
 from src.services.guardrails.common import hash_message
 from src.services.tools import DEMO_MCP_SERVER_NAME, LOCAL_TOOLS
@@ -48,6 +49,7 @@ def _build_hooks() -> list:
         TokenBudgetMiddleware(budget=TOKEN_BUDGET),  # 2° presupuesto de tokens
         SafetyGuardMiddleware(),                     # 3° guardia de contenido en la salida
         RetryMiddleware(max_retries=3),              # 4° reintentos ante errores transitorios
+        ToolOutputGuardrail(),                       # 5° revisa lo que devuelven las tools
     ]
 
 _neon_context = (
