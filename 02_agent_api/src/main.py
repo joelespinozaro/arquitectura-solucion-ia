@@ -57,14 +57,9 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning(
             "Error conectando al demo MCP server: %s. Continuando sin esas tools. "
-            "Revisa 03_mcp_server/.env, las dependencias de 03_mcp_server/requirements.txt y que DEMO_MCP_SERVER_PATH sea absoluta.",
+            "Revisa que 03_mcp_server esté corriendo y que DEMO_MCP_SERVER_URL sea correcta.",
             _root_cause(exc),
         )
-        from src.services.tools import diagnose_demo_mcp_server
-
-        causa = diagnose_demo_mcp_server()
-        if causa:
-            logger.warning("Causa probable del fallo del demo MCP server: %s", causa)
 
     try:
         skills = await load_demo_mcp_skills(demo_client)
