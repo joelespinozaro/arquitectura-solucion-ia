@@ -74,6 +74,30 @@ async def load_demo_mcp_tools() -> Tuple[list, MultiServerMCPClient | None]:
     return tools, client
 
 
+def diagnose_demo_mcp_server() -> str | None:
+    """Arranca el demo MCP server una vez, a mano, para ver por qué se cae.
+
+    El cliente MCP solo informa "Connection closed" cuando el subproceso muere. Aquí se
+    ejecuta el mismo script con la entrada cerrada: un servidor sano termina sin error y
+    uno roto deja su traceback, de donde se toma la última línea (por ejemplo, la
+    variable de entorno que falta). Devuelve None si no encuentra nada raro."""
+    if not DEMO_MCP_SERVER_PATH:
+        return None
+    import subprocess
+
+    try:
+        run = subprocess.run(
+            [sys.executable, DEMO_MCP_SERVER_PATH],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=20,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return f"{type(exc).__name__}: {exc}"
+    if run.returncode == 0:
+        return None
+    lines = [l for l in (run.stderr or "").strip().splitlines() if l.strip()]
+    return lines[-1] if lines else f"el servidor terminó con código {run.returncode}"
+
+
 async def load_demo_mcp_skills(client: MultiServerMCPClient | None) -> List[Dict[str, str]]:
     """Descubre las skills que expone el demo MCP server como recursos MCP
     (esquema skill://..., ver src/routes/skills.py en 03_mcp_server).
