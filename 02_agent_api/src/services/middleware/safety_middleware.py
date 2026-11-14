@@ -1,15 +1,16 @@
 """SafetyGuardMiddleware — guardia de contenido con jump_to.
 
-Hook utilizado (node-style):
-  - after_model con @hook_config(can_jump_to=["end"])
+Hooks utilizados (node-style), ambos con @hook_config(can_jump_to=["end"]):
+  - before_model → revisa el MENSAJE DEL USUARIO antes de gastar una llamada al modelo
+  - after_model  → revisa la RESPUESTA DEL MODELO antes de entregarla
 
-Detecta términos prohibidos en la respuesta del modelo y corta la ejecución
-del agente (jump_to="end") reemplazando el mensaje por una respuesta estándar.
+Si detecta un término prohibido corta la ejecución del agente (jump_to="end")
+y devuelve una respuesta estándar.
 """
 from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware, AgentState, hook_config
-from langchain.messages import AIMessage
+from langchain.messages import AIMessage, HumanMessage
 from langgraph.runtime import Runtime
 
 from src.utils.logger import get_logger
@@ -30,10 +31,11 @@ BLOCKED_RESPONSE = (
 
 
 class SafetyGuardMiddleware(AgentMiddleware):
-    """Guardia de contenido que intercepta respuestas con términos prohibidos.
+    """Guardia de contenido que intercepta mensajes y respuestas con términos prohibidos.
 
-    Si la respuesta del modelo contiene algún término bloqueado, reemplaza
-    el mensaje y detiene la ejecución del agente inmediatamente (jump_to='end').
+    Si el mensaje del usuario o la respuesta del modelo contiene algún término
+    bloqueado, devuelve la respuesta estándar y detiene la ejecución del agente
+    inmediatamente (jump_to='end').
 
     Args:
         blocked_terms: lista de términos prohibidos (case-insensitive).
@@ -45,6 +47,31 @@ class SafetyGuardMiddleware(AgentMiddleware):
         self.blocked_terms = [
             t.upper() for t in (blocked_terms or DEFAULT_BLOCKED_TERMS)
         ]
+
+    def _find_term(self, content: Any) -> str | None:
+        text = str(content).upper()
+        return next((t for t in self.blocked_terms if t in text), None)
+
+    def _check_input(self, state: AgentState) -> dict[str, Any] | None:
+        last = state["messages"][-1]
+        if not isinstance(last, HumanMessage):  # solo la entrada del usuario, no los resultados de tools
+            return None
+        term = self._find_term(last.content)
+        if term is None:
+            return None
+        logger.warning(
+            "Mensaje bloqueado antes de llamar al modelo",
+            extra={"middleware": "SafetyGuardMiddleware", "blocked_term": term, "where": "input"},
+        )
+        return {"messages": [AIMessage(content=BLOCKED_RESPONSE)], "jump_to": "end"}
+
+    @hook_config(can_jump_to=["end"])
+    def before_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+        return self._check_input(state)
+
+    @hook_config(can_jump_to=["end"])
+    async def abefore_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+        return self._check_input(state)
 
     @hook_config(can_jump_to=["end"])
     def after_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
