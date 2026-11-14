@@ -119,3 +119,20 @@ def test_stream_error_se_informa_como_evento(client, repo, monkeypatch):
     events = parse(client.post("/api/chat/stream", json={"question": "hola", "user": "joel"}).text)
     assert events[-1][0] == "error"
     assert "sensible" not in json.dumps(events[-1][1])
+
+
+def test_stream_con_bloqueo_de_guardrail_que_devuelve_dict(client, repo, monkeypatch):
+    """Los guardrails devuelven el bloqueo como dict ({"role": ..., "content": ...}): el stream no debe romperse."""
+    from langchain.agents.middleware import AgentMiddleware, hook_config
+
+    class Bloqueo(AgentMiddleware):
+        @hook_config(can_jump_to=["end"])
+        async def abefore_model(self, state, runtime):
+            return {"messages": [{"role": "assistant", "content": "Mensaje bloqueado por seguridad"}], "jump_to": "end"}
+
+    agente = create_agent(model=FakeToolModel(responses=[AIMessage(content="no debería llegar")]),
+                          tools=[], middleware=[Bloqueo()])
+    use_agent(monkeypatch, repo, agente)
+    events = parse(client.post("/api/chat/stream", json={"question": "ataque", "user": "joel"}).text)
+    assert events[-1][0] == "done"
+    assert events[-1][1]["answer"] == "Mensaje bloqueado por seguridad"
