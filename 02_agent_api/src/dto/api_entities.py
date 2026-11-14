@@ -3,7 +3,9 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, field_validator
+from typing import Literal
+
+from pydantic import BaseModel, Field, field_validator
 
 class ChatRequest(BaseModel):
     question: str
@@ -155,3 +157,26 @@ class EvaluateResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ScanInputRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=20000)
+    pii_mode: Literal["block", "mask", "off"] = "mask"
+
+
+class ScanOutputRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=20000)
+    pii_mode: Literal["block", "mask", "off"] = "mask"
+    canary_tokens: List[str] = Field(default_factory=list, max_length=5)
+
+
+class ScanFinding(BaseModel):
+    layer: str
+    category: str
+
+
+class ScanResponse(BaseModel):
+    decision: Literal["allow", "mask", "block"]
+    text: Optional[str] = None
+    findings: List[ScanFinding] = []
+    pii_mode: str
+    audit_id: str

@@ -7,6 +7,7 @@ from src.routes.chat import chat_router
 from src.routes.errors import router as errors_router
 from src.routes.feedback import router as feedback_router
 from src.routes.evaluate import router as evaluate_router
+from src.routes.scan import router as scan_router
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -78,6 +79,7 @@ app.include_router(chat_router)
 app.include_router(errors_router)
 app.include_router(feedback_router)
 app.include_router(evaluate_router)
+app.include_router(scan_router)
 
 if __name__ == "__main__":
     logger.info("Iniciando servidor en puerto 8080")

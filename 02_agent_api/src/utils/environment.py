@@ -78,3 +78,6 @@ if GOOGLE_APPLICATION_CREDENTIALS:
 
 # Hooks (parte 3): presupuesto de tokens por conversación
 TOKEN_BUDGET: int = config("TOKEN_BUDGET", default=8000, cast=int)
+
+# Servicio de escaneo /v1/scan/*: si se define, exige el header X-API-Key
+SCAN_API_KEY: str | None = config("SCAN_API_KEY", default=None)
