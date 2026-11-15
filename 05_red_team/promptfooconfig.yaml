@@ -32,7 +32,7 @@ redteam:
     - harmful:privacy
     - indirect-prompt-injection
   strategies:
-    - jailbreak
-    - prompt-injection
+    - jailbreak:composite
+    - jailbreak-templates
     - base64
     - leetspeak
