@@ -237,18 +237,16 @@ class RagasService:
             return None
 
         try:
-            from langsmith import Client
-
-            client = Client(api_url=langsmith_endpoint, api_key=langsmith_api_key)
+            from src.utils.observability import enviar_feedback
 
             for trace_id in trace_ids:
                 for metric_name, score in metrics.items():
                     if score is not None:
-                        client.create_feedback(
-                            run_id=trace_id,
-                            key=f"ragas_{metric_name}",
-                            score=score,
-                            comment=f"RAGAS evaluation — judge: {LLM_JUDGE}",
+                        enviar_feedback(
+                            trace_id,
+                            f"ragas_{metric_name}",
+                            score,
+                            f"RAGAS evaluation — judge: {LLM_JUDGE}",
                         )
 
             project = os.getenv("LANGSMITH_PROJECT", "default")

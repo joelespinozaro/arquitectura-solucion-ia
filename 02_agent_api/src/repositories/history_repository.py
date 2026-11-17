@@ -34,6 +34,29 @@ class HistoryRepository:
         self.db.refresh(record)
         return record
 
+    def get_recent(self, hours: int = 24, limit: int = 20) -> List[History]:
+        """Conversaciones recientes, de la más nueva a la más vieja."""
+        from datetime import datetime, timedelta
+
+        desde = datetime.utcnow() - timedelta(hours=hours)
+        return (
+            self.db.query(History)
+            .filter(History.created_at >= desde)
+            .order_by(History.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+    def get_negative(self, limit: int = 50) -> List[History]:
+        """Conversaciones que el usuario marcó como mala (pulgar abajo)."""
+        return (
+            self.db.query(History)
+            .filter(History.is_ok.is_(False))
+            .order_by(History.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
     def get_by_session_id(self, session_id: str, limit: int = 10) -> List[History]:
         return (
             self.db.query(History)

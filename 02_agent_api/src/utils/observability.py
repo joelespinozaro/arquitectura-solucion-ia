@@ -61,3 +61,60 @@ def anotar_traza(**metadata: Any) -> None:
             run.add_metadata(metadata)
     except Exception as exc:  # nunca romper el flujo por observabilidad
         logger.warning("No pude anotar la traza en LangSmith: %s", exc)
+
+
+# ── Feedback y datasets (M5S2 parte 2) ──────────────────────────────────────
+
+_cliente = None
+_session_id_cache: Dict[str, Any] = {}
+
+
+def obtener_cliente():
+    """Cliente de LangSmith (uno solo por proceso). None si no está configurado."""
+    global _cliente
+    if not langsmith_activo():
+        return None
+    if _cliente is None:
+        from langsmith import Client
+
+        _cliente = Client()
+    return _cliente
+
+
+def _project_session_id(client) -> Any:
+    """UUID del proyecto de LangSmith. El SDK actual lo exige al crear feedback."""
+    nombre = os.getenv("LANGSMITH_PROJECT", "default")
+    if nombre not in _session_id_cache:
+        _session_id_cache[nombre] = client.read_project(project_name=nombre).id
+    return _session_id_cache[nombre]
+
+
+def enviar_feedback(
+    trace_id: str,
+    key: str,
+    score: Optional[float] = None,
+    comment: Optional[str] = None,
+) -> bool:
+    """Adjunta un puntaje a la traza `trace_id`. Devuelve True si se envió.
+
+    Nunca lanza: si LangSmith no está configurado o falla, devuelve False.
+    """
+    client = obtener_cliente()
+    if client is None:
+        return False
+    try:
+        import uuid
+
+        run_id = uuid.UUID(str(trace_id))
+        client.create_feedback(
+            run_id=run_id,
+            trace_id=run_id,
+            key=key,
+            score=score,
+            comment=comment,
+            session_id=_project_session_id(client),
+        )
+        return True
+    except Exception as exc:
+        logger.warning("No pude enviar feedback '%s' a LangSmith: %s", key, exc)
+        return False
