@@ -13,3 +13,6 @@ node_modules/
 # resultados de Locust
 loadtest/resultados*
 .venv-*/
+
+# despliegue en Cloud Run (Parte 5): variables no sensibles, se generan en cada máquina
+/*-env.yaml

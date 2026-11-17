@@ -1,19 +1,21 @@
 # Despliegue en Google Cloud: clase M5S2 (17/11/2026)
 
+> Paso a paso para alumnos: guía del laboratorio M5S2, **Parte 5** (joelespinozaro.github.io/ai-solution-architect/m5-s2/laboratorio/#r7). Este archivo es el registro del despliegue de la demo en clase.
+
 Demo en vivo del profesor: el agente del instituto (`02_agent_api` + `06_web_chat`) y el servidor MCP (`03_mcp_server`) corriendo en Cloud Run, con imágenes construidas en Cloud Build y secretos en Secret Manager. Desplegado desde la rama `m5-s2` (commit `239a10a`).
 
 ## Datos del despliegue
 
 | Dato | Valor |
 |---|---|
-| Proyecto | `arquitectura-solucion-ia` (número 301017713387) |
+| Proyecto | `arquitectura-solucion-ia` (proyecto del profesor) |
 | Región | `us-central1` |
-| Facturación | cuenta `ia-facturacion` (01661F-28847D-B1E24E) |
+| Facturación | cuenta de facturación del profesor, vinculada al proyecto |
 | Artifact Registry | `us-central1-docker.pkg.dev/arquitectura-solucion-ia/instituto` |
 | Service account de runtime | `agente-runtime@arquitectura-solucion-ia.iam.gserviceaccount.com` |
-| agent-api (público) | https://agent-api-2z27txvfwq-uc.a.run.app |
-| Chat web | https://agent-api-2z27txvfwq-uc.a.run.app/chat/ |
-| mcp-server (privado, solo `run.invoker` de la SA) | https://mcp-server-2z27txvfwq-uc.a.run.app |
+| agent-api (público) | `https://agent-api-<hash>.a.run.app` (se borra después de clase) |
+| Chat web | `<URL de agent-api>/chat/` |
+| mcp-server (privado, solo `run.invoker` de la SA) | `https://mcp-server-<hash>.a.run.app` |
 | LangSmith | proyecto `instituto-cloudrun` |
 | Qdrant | colección `data-academy` (217 fragmentos) |
 
@@ -52,15 +54,15 @@ export PROJECT_ID="arquitectura-solucion-ia" REGION="us-central1" AR_REPOSITORY=
 export SA_NAME="agente-runtime"; export SERVICE_SA="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 export MCP_SERVICE="mcp-server" AGENT_SERVICE="agent-api"
 
-gcloud auth login joelespinozaro@gmail.com
+gcloud auth login
 gcloud config set project "$PROJECT_ID"
-gcloud billing projects link "$PROJECT_ID" --billing-account=01661F-28847D-B1E24E
+gcloud billing projects link "$PROJECT_ID" --billing-account=<ID_CUENTA_FACTURACION>
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
   secretmanager.googleapis.com iamcredentials.googleapis.com
 gcloud artifacts repositories create "$AR_REPOSITORY" --repository-format=docker --location="$REGION"
 gcloud iam service-accounts create "$SA_NAME" --display-name="Runtime del agente del instituto"
 gcloud iam service-accounts add-iam-policy-binding "$SERVICE_SA" \
-  --member="user:joelespinozaro@gmail.com" --role="roles/iam.serviceAccountUser"
+  --member="user:$(gcloud config get-value account)" --role="roles/iam.serviceAccountUser"
 
 # Secretos: valor leído del .env (sin \r ni comillas) y pasado por stdin
 #   printf %s "$VALOR" | gcloud secrets versions add <id> --data-file=-
@@ -105,7 +107,7 @@ Tiempos de build: MCP 1 min 44 s, agente 6 min 30 s.
 
 ## Problemas y solución
 
-1. **Facturación cerrada en el proyecto inicial.** El proyecto de la cuenta `joooel0321` no tenía facturación. Se cambió a `arquitectura-solucion-ia` (cuenta `joelespinozaro`) y se vinculó `ia-facturacion`.
+1. **Facturación cerrada en el proyecto inicial.** El primer proyecto no tenía facturación activa. Se usó otro proyecto y se le vinculó una cuenta de facturación abierta.
 2. **`500` en `/api/chat`: `column "latency_ms" of relation "history" does not exist`.** La base Neon no tenía las migraciones de M5S2. Se aplicaron `02_agent_api/setup/feedback_migration.sql` y `setup/observabilidad_migration.sql` (aditivas, `IF NOT EXISTS`). **Si se usa otra base, aplicarlas antes de desplegar.**
 3. **20 tests de `tests/scan` fallaban en local.** El `.env` local define `SCAN_API_KEY`, entonces `/v1/scan` exige el header y los tests reciben 401. Con `SCAN_API_KEY=` vacía pasan 197. No es un fallo del código.
 4. **`.gcloudignore` raíz.** Sin lista blanca se subían más de 600 archivos (`01_agent-app/.next`). Ahora sube solo lo necesario.
