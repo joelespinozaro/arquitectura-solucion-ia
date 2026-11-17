@@ -49,18 +49,20 @@ docker start -i mywaha
 
 # 2. Agent API (terminal 2)
 cd 02_agent_api
-python3 -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv-agent --prompt agent && source .venv-agent/bin/activate
 pip install -r requirements.txt
 cp .env.example .env        # completa OPENAI_API_KEY, DATABASE_URL y QDRANT_*
 python -m src.main          # :8080
 
 # 3. Gateway (terminal 3)
 cd 02_chatbot_gateway
-python3 -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv-gateway --prompt gateway && source .venv-gateway/bin/activate
 pip install -r requirements.txt
 # crea .env con CHATBOT_API_URL, WAHA_API_URL y WAHA_API_KEY (la que muestra WAHA al iniciar)
 python -m src.main          # :8090
 ```
+
+> **Entornos virtuales.** Cada servicio tiene su propio entorno con un nombre distinto: `.venv-agent` (02_agent_api), `.venv-mcp` (03_mcp_server), `.venv-gateway` (02_chatbot_gateway) y `.venv-loadtest` (loadtest). El prompt de la terminal muestra el nombre corto, por ejemplo `(agent)`. En PowerShell se activa con `.venv-agent\Scripts\Activate.ps1` y en Git Bash con `source .venv-agent/Scripts/activate`.
 
 Al iniciar, WAHA muestra en su terminal la API key y el usuario y clave del dashboard. Copia la API key al `.env` del Gateway. Luego, en `http://localhost:3030/dashboard`: inicia la sesión `default`, escanea el QR con un número de pruebas y en Configuration registra el webhook `http://host.docker.internal:8090/waha/webhook` con el evento `message`. En Linux usa la IP local de tu máquina en lugar de `host.docker.internal`.
 
