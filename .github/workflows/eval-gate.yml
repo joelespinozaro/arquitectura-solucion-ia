@@ -30,6 +30,7 @@ jobs:
         working-directory: 07_evals
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           PROMPTFOO_PASS_RATE_THRESHOLD: "90"
           PROMPTFOO_DISABLE_TELEMETRY: "1"
         run: npx -y promptfoo@0.125.1 eval --no-cache -o resultados.json
