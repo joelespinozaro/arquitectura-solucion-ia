@@ -45,3 +45,4 @@ build/
 # Docker mismo
 Dockerfile
 .dockerignore
+.venv-*/
