@@ -9,6 +9,7 @@ from langchain.messages import SystemMessage
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage, convert_to_messages
 from langchain_core.tools import BaseTool, StructuredTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -31,9 +32,9 @@ from src.utils.environment import (
     TOKEN_BUDGET,
     HISTORY_LIMIT,
     NEON_PROJECT_ID,
-    LLM_PROVIDER,
+    OPENAI_API_KEY,
+    OPENAI_MODEL,
 )
-from src.utils.llm_factory import build_chat_model
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -209,8 +210,7 @@ class SkillMiddleware(AgentMiddleware):
         return await handler(self._inject_skills(request))
 
 
-logger.info("Proveedor LLM: %s", LLM_PROVIDER)
-_llm = build_chat_model()
+_llm = ChatOpenAI(model=OPENAI_MODEL, api_key=OPENAI_API_KEY)
 _agent = create_agent(
     model=_llm,
     tools=LOCAL_TOOLS,

@@ -2,17 +2,8 @@ import os
 
 from decouple import config
 
-# Proveedor del modelo de chat: "openai" (por defecto) o "anthropic" (Claude).
-# Con "anthropic" el chat y el juez usan Claude, pero el servidor MCP (03_mcp_server)
-# sigue necesitando OPENAI_API_KEY porque Anthropic no ofrece API de embeddings.
-LLM_PROVIDER: str = config("LLM_PROVIDER", default="openai").strip().lower()
-if LLM_PROVIDER not in ("openai", "anthropic"):
-    raise ValueError("LLM_PROVIDER debe ser 'openai' o 'anthropic'")
-
-OPENAI_API_KEY: str = config("OPENAI_API_KEY", default="")
-OPENAI_MODEL: str = config("OPENAI_MODEL", default="gpt-4o-mini")
-ANTHROPIC_API_KEY: str = config("ANTHROPIC_API_KEY", default="")
-ANTHROPIC_MODEL: str = config("ANTHROPIC_MODEL", default="claude-haiku-5-5")
+OPENAI_API_KEY: str = config("OPENAI_API_KEY")
+OPENAI_MODEL: str = config("OPENAI_MODEL")
 
 DATABASE_URL: str = config("DATABASE_URL")
 HISTORY_LIMIT: int = config("HISTORY_LIMIT", default=10, cast=int)
