@@ -1,0 +1,4 @@
+# SLO de ejemplo para el endpoint /api/chat (con modelo simulado de 800 ms).
+# Cámbialo y vuelve a medir: el SLO es una decisión de producto, no un valor técnico.
+p95_ms: 2000        # el 95% de las respuestas debe tardar menos de esto
+error_rate_pct: 1   # como máximo 1% de peticiones fallidas

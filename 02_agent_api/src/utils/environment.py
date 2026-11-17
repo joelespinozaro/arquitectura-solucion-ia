@@ -91,3 +91,10 @@ MCP_ALLOWED_SERVERS: list[str] = [s.strip() for s in config("MCP_ALLOWED_SERVERS
 # Si no se define, se genera uno aleatorio por proceso.
 OUTPUT_PII_MODE: str = config("OUTPUT_PII_MODE", default="off")
 CANARY_TOKEN: str = config("CANARY_TOKEN", default="") or "CNRY-" + __import__("secrets").token_hex(6)
+
+# Prueba de carga (M5S2 parte 4). LLM_MODE=fake reemplaza a OpenAI por un modelo simulado
+# que responde con una demora fija y apaga las capas de guardrails que llaman a Groq.
+# Así se mide la arquitectura propia (API, capas regex, base de datos) y no los límites
+# de velocidad de los proveedores. NUNCA usar en producción.
+LLM_MODE: str = config("LLM_MODE", default="real")  # real | fake
+LLM_FAKE_DELAY_MS: int = config("LLM_FAKE_DELAY_MS", default=800, cast=int)

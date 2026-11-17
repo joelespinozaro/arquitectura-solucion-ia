@@ -32,6 +32,8 @@ from src.utils.environment import (
     CANARY_TOKEN,
     TOKEN_BUDGET,
     HISTORY_LIMIT,
+    LLM_FAKE_DELAY_MS,
+    LLM_MODE,
     NEON_PROJECT_ID,
     OPENAI_API_KEY,
     OPENAI_MODEL,
@@ -191,7 +193,14 @@ class SkillMiddleware(AgentMiddleware):
         return await handler(self._inject_skills(request))
 
 
-_llm = ChatOpenAI(model=OPENAI_MODEL, api_key=OPENAI_API_KEY)
+if LLM_MODE == "fake":
+    # Solo para pruebas de carga (M5S2 parte 4): no se llama a OpenAI.
+    from src.utils.modelo_simulado import ModeloSimulado
+
+    logger.warning("LLM_MODE=fake: se usa un modelo SIMULADO (demora %d ms). No usar en producción.", LLM_FAKE_DELAY_MS)
+    _llm = ModeloSimulado(delay_ms=LLM_FAKE_DELAY_MS)
+else:
+    _llm = ChatOpenAI(model=OPENAI_MODEL, api_key=OPENAI_API_KEY)
 _agent = create_agent(
     model=_llm,
     tools=LOCAL_TOOLS,

@@ -41,7 +41,7 @@ from src.services.guardrails.layer4_custom_regex import CustomRegexMiddleware
 from src.services.guardrails.layer6_url_filter import UrlFilterMiddleware
 from src.services.guardrails.layer7_prompt_guard import PromptGuardMiddleware
 from src.services.guardrails.layer8_llama_guard import LlamaGuardMiddleware
-from src.utils.environment import GUARDRAIL_ENGINE, MODEL_ARMOR_PROJECT_ID, MODEL_ARMOR_TEMPLATE_ID
+from src.utils.environment import GUARDRAIL_ENGINE, LLM_MODE, MODEL_ARMOR_PROJECT_ID, MODEL_ARMOR_TEMPLATE_ID
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -65,6 +65,14 @@ def _local_content_safety_layers() -> List[AgentMiddleware]:
 def build_input_guardrails() -> List[AgentMiddleware]:
     """Construye el pipeline activo según `GUARDRAIL_ENGINE` — ver docstring
     del módulo para el detalle de cada motor y el fallback automático."""
+    if LLM_MODE == "fake":
+        # Prueba de carga: sin las capas que llaman a Groq (7 y 8) ni Model Armor,
+        # para medir la arquitectura propia y no los límites de un proveedor.
+        logger.warning("LLM_MODE=fake: capas 7 y 8 (Groq) y Model Armor desactivadas.")
+        return [
+            layer for layer in _local_content_safety_layers()
+            if not isinstance(layer, (PromptGuardMiddleware, LlamaGuardMiddleware))
+        ]
     use_model_armor = (
         GUARDRAIL_ENGINE == "model_armor"
         and bool(MODEL_ARMOR_PROJECT_ID)
