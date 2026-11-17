@@ -1,0 +1,22 @@
+# Eval gate de prompts (M5S2 parte 3). Mide CALIDAD y reglas del prompt, no seguridad
+# (la seguridad la cubre 05_red_team). Lo ejecuta GitHub Actions en cada PR que toque
+# 02_agent_api/prompts/** y lo puedes correr a mano:
+#     cd 07_evals && npx promptfoo@0.125.1 eval
+description: Golden set del asistente del instituto
+
+prompts:
+  - file://build_prompt.py:build
+
+providers:
+  - id: openai:gpt-4o-mini
+    config:
+      temperature: 0
+  # Model CI: para comparar contra otro modelo, descomenta una línea y vuelve a correr.
+  # El reporte muestra calidad y latencia de cada uno en la misma tabla.
+  # - id: openai:gpt-4.1-mini
+
+defaultTest:
+  vars:
+    canary: CNRY-GOLDEN-0001
+
+tests: file://golden.yaml

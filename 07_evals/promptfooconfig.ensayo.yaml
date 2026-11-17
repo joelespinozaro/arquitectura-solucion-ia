@@ -1,0 +1,17 @@
+# Ensayo SIN keys: un "modelo" simulado (ensayo/modelo_simulado.py) obedece las reglas
+# del prompt con reglas simples. Sirve para ver el gate cambiar de verde a rojo sin gastar
+# crédito. NO mide un modelo real: para eso usa promptfooconfig.yaml.
+#     npx promptfoo@0.125.1 eval -c promptfooconfig.ensayo.yaml --grader file://ensayo/juez_simulado.py
+description: Ensayo del eval gate con un modelo simulado
+
+prompts:
+  - file://build_prompt.py:build
+
+providers:
+  - file://ensayo/modelo_simulado.py
+
+defaultTest:
+  vars:
+    canary: CNRY-GOLDEN-0001
+
+tests: file://golden.yaml

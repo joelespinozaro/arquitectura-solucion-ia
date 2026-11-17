@@ -1,0 +1,40 @@
+name: Eval gate (prompt CI)
+
+# Bloquea un PR que empeora el prompt del asistente. Corre Promptfoo contra un golden set
+# con un modelo real, así que necesita OPENAI_API_KEY y no corre en cada push.
+# Para activarlo en tu fork: variable de repositorio EVAL_GATE_ENABLED=true
+# y secret OPENAI_API_KEY (Settings > Secrets and variables > Actions).
+on:
+  pull_request:
+    paths:
+      - "02_agent_api/prompts/**"
+      - "07_evals/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  eval-gate:
+    runs-on: ubuntu-latest
+    if: ${{ vars.EVAL_GATE_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Eval del golden set (falla si pasa menos del 90%)
+        working-directory: 07_evals
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PROMPTFOO_PASS_RATE_THRESHOLD: "90"
+          PROMPTFOO_DISABLE_TELEMETRY: "1"
+        run: npx -y promptfoo@0.125.1 eval --no-cache -o resultados.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-gate-resultados
+          path: 07_evals/resultados.json
