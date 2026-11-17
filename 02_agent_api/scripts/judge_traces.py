@@ -13,11 +13,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from langchain_openai import ChatOpenAI  # noqa: E402
 
 from src.repositories import SessionLocal  # noqa: E402
 from src.repositories.history_repository import HistoryRepository  # noqa: E402
 from src.services.eval_service import juzgar_conversaciones  # noqa: E402
-from src.utils.llm_factory import build_chat_model  # noqa: E402
+from src.utils.environment import OPENAI_API_KEY, OPENAI_MODEL  # noqa: E402
 from src.utils.observability import langsmith_activo  # noqa: E402
 
 
@@ -34,7 +35,7 @@ def main() -> None:
     try:
         historial = HistoryRepository(db).get_recent(hours=args.horas, limit=args.limite)
         print(f"Conversaciones a juzgar: {len(historial)}")
-        llm = build_chat_model(temperature=0)
+        llm = ChatOpenAI(model=OPENAI_MODEL, api_key=OPENAI_API_KEY, temperature=0)
         r = juzgar_conversaciones(llm, historial)
     finally:
         db.close()
