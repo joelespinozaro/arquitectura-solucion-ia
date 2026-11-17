@@ -12,3 +12,4 @@ node_modules/
 
 # resultados de Locust
 loadtest/resultados*
+.venv-*/
