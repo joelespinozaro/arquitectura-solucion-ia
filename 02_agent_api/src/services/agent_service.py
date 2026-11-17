@@ -26,6 +26,7 @@ from src.services.guardrails.common import hash_message
 from src.services.tools import DEMO_MCP_SERVER_NAME, LOCAL_TOOLS
 from src.repositories.history_repository import HistoryRepository
 from src.repositories.models.history import History
+from src.utils.observability import trace_config
 from src.utils.environment import (
     CANARY_TOKEN,
     TOKEN_BUDGET,
@@ -290,7 +291,8 @@ class AgentService:
             {
                 "messages": [*history_messages, HumanMessage(content=question)],
                 "token_count": tokens_before,  # el presupuesto sigue corriendo entre mensajes
-            }
+            },
+            config=trace_config(trace_id, session_id, user, tags=["chat"]),
         )
         _SESSION_TOKENS[session_id] = agent_response.get("token_count", tokens_before)
         result = self._parse_agent_response(agent_response)
@@ -306,6 +308,7 @@ class AgentService:
                 answer=result["answer"],
                 input_tokens=result["input_tokens"],
                 output_tokens=result["output_tokens"],
+                latency_ms=round(t_agent * 1000),
                 user=user,
                 sources=(
                     json.dumps(sources, ensure_ascii=False)
@@ -367,6 +370,7 @@ class AgentService:
                 {"messages": [*history_messages, HumanMessage(content=question)],
                  "token_count": tokens_before},
                 stream_mode="updates",
+                config=trace_config(trace_id, session_id, user, tags=["chat_stream"]),
             ):
                 for update in chunk.values():
                     if isinstance(update, dict) and "token_count" in update:
@@ -407,6 +411,7 @@ class AgentService:
             History(
                 trace_id=trace_id, session_id=session_id, question=question, answer=answer,
                 input_tokens=result["input_tokens"], output_tokens=result["output_tokens"], user=user,
+                latency_ms=elapsed_ms,
                 sources=json.dumps(sources, ensure_ascii=False) if sources else None,
             )
         )

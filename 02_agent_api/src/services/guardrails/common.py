@@ -70,6 +70,11 @@ def log_block(
         log_extra.update(extra)
     logger.warning("InputGuardrail bloqueó un mensaje en %s: %s", layer, reason, extra=log_extra)
 
+    # En la traza de LangSmith queda visible qué capa bloqueó y por qué (M5S2)
+    from src.utils.observability import anotar_traza
+
+    anotar_traza(guardrail_layer=layer, guardrail_reason=reason, guardrail_blocked=True)
+
 
 def block_result(text: str = DEFAULT_BLOCK_MESSAGE) -> Dict[str, Any]:
     """Construye el payload estándar para cortar la ejecución del agente."""

@@ -17,6 +17,7 @@ class History(Base):
     user = Column(String(255), nullable=True)
     input_tokens = Column(Integer, nullable=True)
     output_tokens = Column(Integer, nullable=True)
+    latency_ms = Column(Integer, nullable=True)  # M5S2: tiempo del agente en ms
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     # Columna física sigue llamándose retrieved_contexts (evita una migración);
     # ahora guarda una lista de ToolSource (ver dto/api_entities.py), no solo RAG.
