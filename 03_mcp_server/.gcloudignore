@@ -1,0 +1,25 @@
+# Lo que no se sube a Cloud Build (secretos, entornos virtuales, resultados)
+.git/
+.gitignore
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.venv/
+.venv-*/
+**/.venv/
+**/.venv-*/
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+**/.pytest_cache/
+node_modules/
+**/node_modules/
+.ipynb_checkpoints/
+loadtest/resultados*
+data/asesorias.jsonl
+**/data/asesorias.jsonl

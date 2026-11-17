@@ -1,0 +1,11 @@
+# Imagen de 02_agent_api para Cloud Run con el chat web (06_web_chat) incluido.
+# Se construye con contexto en la raíz del repo: ver cloudbuild.agent.yaml.
+FROM python:3.11-slim
+WORKDIR /app
+COPY 02_agent_api/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt && python -m spacy download es_core_news_sm
+COPY 02_agent_api/ /app/
+COPY 06_web_chat/ /web_chat/
+ENV PYTHONPATH=/app PYTHONUNBUFFERED=1 WEB_CHAT_DIR=/web_chat
+EXPOSE 8080
+CMD ["python", "-m", "src.main"]

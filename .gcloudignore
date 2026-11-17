@@ -1,0 +1,16 @@
+# Build de agent-api (cloudbuild.agent.yaml): solo sube lo que usa la imagen.
+/*
+!/02_agent_api/
+!/06_web_chat/
+!/Dockerfile.agent-cloudrun
+# Nunca subir secretos ni entornos ni basura local
+**/.env
+**/.env.*
+!**/.env.example
+**/.venv/
+**/.venv-*/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/node_modules/
+**/.ipynb_checkpoints/
