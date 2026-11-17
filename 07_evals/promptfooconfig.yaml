@@ -14,12 +14,6 @@ providers:
   # Model CI: para comparar contra otro modelo, descomenta una línea y vuelve a correr.
   # El reporte muestra calidad y latencia de cada uno en la misma tabla.
   # - id: openai:gpt-4.1-mini
-  #
-  # Con llave de Claude (ANTHROPIC_API_KEY): comenta el proveedor openai de arriba
-  # y descomenta este.
-  # - id: anthropic:messages:claude-haiku-5-5
-  #   config:
-  #     temperature: 0
 
 defaultTest:
   vars:
